@@ -7,22 +7,30 @@ const connection = createConnection({
     database: 'test_db',
 });
 
-export const vulnerableQuery = (userInput: string, callback: any) => {
-    // Vulnerable query - SQL Injection (due to direct user input in the query)
-    const query1 = `SELECT * FROM users WHERE username = '${userInput}'`;
-    connection.query(query1, callback);
-};
+export const handleQueries = (queryType: string, userInput: string | number, callback: any) => {
+    let query = '';
 
-export const safeQueryWithNumber = (id: number, callback: any) => {
-    // Safe query - the external input is an integer
-    const query2 = `SELECT * FROM users WHERE id = ${id}`;
-    connection.query(query2, callback);
-};
+    switch (queryType) {
+        case 'vulnerable':
+            // Vulnerable query - SQL Injection (due to direct user input in the query)
+            query = `SELECT * FROM users WHERE username = '${userInput}'`;
+            break;
 
-export const safeQueryWithConstant = (callback: any) => {
-    const fixedUsername = 'admin'; // constant value
+        case 'safe-int':
+            // Safe query - the external input is an integer
+            query = `SELECT * FROM users WHERE id = ${userInput}`;
+            break;
 
-    // Safe query - the value is constant
-    const query3 = `SELECT * FROM users WHERE username = '${fixedUsername}'`;
-    connection.query(query3, callback);
+        case 'safe-constant':
+            const fixedUsername = 'admin'; // constant value
+            // Safe query - the value is constant
+            query = `SELECT * FROM users WHERE username = '${fixedUsername}'`;
+            break;
+
+        default:
+            callback(new Error('Invalid query type'), null);
+            return;
+    }
+
+    connection.query(query, callback);
 };
